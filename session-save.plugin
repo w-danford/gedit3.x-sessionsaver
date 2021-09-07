@@ -1,0 +1,10 @@
+[Plugin]
+Loader=python3
+Module=session-save
+IAge=3
+Name=Session Saver
+Description=Save and restore your working sessions
+Authors=Bill Danford <w.danford@electronics-software.com>
+Copyright=Copyright © 2020 Bill Danford <w.danford@electronics-software.com>
+Website=http://www.electronics-software.com
+Version=1.0.0
