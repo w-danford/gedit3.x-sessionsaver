@@ -47,8 +47,6 @@ class SessionSaveWindow(Gtk.Window):
         self.window = app_window
         # activate window
         self.show_all()
-        self.set_modal(True)
-        self.set_transient_for()
         # end: stays open waiting response
 
 
