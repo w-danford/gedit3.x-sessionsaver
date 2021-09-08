@@ -60,6 +60,7 @@ class SessionSaveWindow(Gtk.Window):
         ses_name = self.entry.get_text()
         # consider that session name matches an existing one,
         # warn about this (so as not to create duplicate "session"s
+        duplicate = False
         for c in self.session_file.find_all ("session"):
             if c['name'] == ses_name :
                 ##print ("duplicate session name")
@@ -70,42 +71,43 @@ class SessionSaveWindow(Gtk.Window):
                                buttons=Gtk.ButtonsType.OK,
                                text=("%s exists!" % ses_name),
                                secondary_text=("Choose another name or delete existing \"%s\"" % ses_name),)
+                duplicate = True
                 dialog.run()
                 dialog.destroy()
                 break
-                self.destroy()
+        if duplicate == False :
+            # generate this new 'session' content
+            files = (" <session name=\"%s\">\n" % (ses_name))
+            for f in self.file_list:
+                files += ("  <file path=\"%s\"/>\n" % f)
+            files += (" </session>\n")
+            ##print (files)
 
-        # generate this new 'session' content
-        files = (" <session name=\"%s\">\n" % (ses_name))
-        for f in self.file_list:
-            files += ("  <file path=\"%s\"/>\n" % f)
-        files += (" </session>\n")
-        ##print (files)
+            # convert to BeautifulSoup 'file' (having this single tag)
+            new_soup = BeautifulSoup (files, 'xml')
+            # read back the newly generated tag
+            new_tag = new_soup.find ("session")
+            # get whole file, i.e 'saved-sessions' tag
+            tag = self.session_file.find ("saved-sessions")
+            # append new session
+            tag.append (new_tag)
+            ##print ("=== just tag:")
+            ##print (tag)
+            ##print ("=== final 'soup':")
+            ##print (self.session_file)
+            ##print (str (self.session_file))
+            # save back to disk
+            try:
+                # Appears BeatifulSoup CANNOT write back, open in 'w' mode
+                # BeatifulSoup only reads in an xml text, coverts to an xml editable object
+                save_sessions = open (os.path.expanduser("~/.config/gedit/saved-sessions.xml"), mode='w')
+            except OSError:
+                # should not happen, 'w' mode truncates or forces creation
+                print ("Could not open / update session file (%s)" %
+                       os.path.expanduser("~/.config/gedit/saved-sessions.xml"))
+            else:
+                save_sessions.write (str(self.session_file))
 
-        # convert to BeautifulSoup 'file' (having this single tag)
-        new_soup = BeautifulSoup (files, 'xml')
-        # read back the newly generated tag
-        new_tag = new_soup.find ("session")
-        # get whole file, i.e 'saved-sessions' tag
-        tag = self.session_file.find ("saved-sessions")
-        # append new session
-        tag.append (new_tag)
-        ##print ("=== just tag:")
-        ##print (tag)
-        ##print ("=== final 'soup':")
-        ##print (self.session_file)
-        ##print (str (self.session_file))
-        # save back to disk
-        try:
-            # Appears BeatifulSoup CANNOT write back, open in 'w' mode
-            # BeatifulSoup only reads in an xml text, coverts to an xml editable object
-            save_sessions = open (os.path.expanduser("~/.config/gedit/saved-sessions.xml"), mode='w')
-        except OSError:
-            # should not happen, 'w' mode truncates or forces creation
-            print ("Could not open / update session file (%s)" %
-                   os.path.expanduser("~/.config/gedit/saved-sessions.xml"))
-        else:
-            save_sessions.write (str(self.session_file))
         self.destroy()
 
 
